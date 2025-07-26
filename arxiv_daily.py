@@ -64,7 +64,41 @@ class ArxivDaily:
         )
 
         self.description = description
+        self.user_prompt, self.zotero_analysis = self.parse_description(description)
+        self.user_prompt_weight = self.compute_user_prompt_weight(self.user_prompt)
+        self.zotero_weight = 1 - self.user_prompt_weight
         self.lock = threading.Lock()  # 添加线程锁
+
+    @staticmethod
+    def parse_description(description: str):
+        """
+        Parse description.txt content to extract 用户自定义提示词 and Zotero文献库分析.
+        Returns (user_prompt, zotero_analysis)
+        """
+        user_marker = "用户自定义提示词："
+        zotero_marker = "Zotero文献库分析："
+        user_start = description.find(user_marker)
+        zotero_start = description.find(zotero_marker)
+        if user_start == -1 or zotero_start == -1:
+            return ("", "")
+        user_prompt = description[user_start + len(user_marker):zotero_start].strip()
+        zotero_analysis = description[zotero_start + len(zotero_marker):].strip()
+        return user_prompt, zotero_analysis
+
+    @staticmethod
+    def compute_user_prompt_weight(user_prompt: str) -> float:
+        """
+        Compute the weight for 用户自定义提示词 based on its length (in characters).
+        """
+        length = len(user_prompt.replace("\n", "").replace(" ", ""))
+        if length > 25:
+            return 0.7
+        elif length > 10:
+            return 0.5
+        elif length > 5:
+            return 0.4
+        else:
+            return 0.0
 
     def get_language_instruction(self):
         """根据语言返回相应的指令"""
@@ -383,10 +417,17 @@ class ArxivDaily:
         # 获取对应语言的提示词，如果没有则使用中文
         prompt_template = language_prompts.get(self.language, language_prompts["zh"])
         
+        # 构建加权描述
+        weighted_description = f"""
+        用户自定义提示词（权重 {self.user_prompt_weight:.2f}）：
+        {self.user_prompt}
+        \nZotero文献库分析（权重 {self.zotero_weight:.2f}）：
+        {self.zotero_analysis}
+        """
         prompt = f"""
             你是一个有帮助的 AI 研究助手，可以帮助我构建每日论文推荐系统。
-            以下是我最近研究领域的描述：
-            {self.description}
+            以下是我最近研究领域的描述（已加权）：
+            {weighted_description}
         """
         prompt += f"""
             以下是我从昨天的 arXiv 爬取的论文，我为你提供了标题和摘要：
