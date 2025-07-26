@@ -1,4 +1,5 @@
-python 3.11
+bs4
+requests
 tqdm
 loguru
 # For ollama

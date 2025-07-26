@@ -20,7 +20,7 @@ WORKSPACE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+    return render_template('web.html')
 
 @app.route('/run_arxiv_daily', methods=['POST'])
 def run_arxiv_daily():

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Arxiv每日论文推荐 - AI驱动的学术发现</title>
+    <title>ArXivBuudy - AI驱动的学术发现</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -750,7 +750,7 @@
             <!-- 头部 -->
             <div class="header">
                 <h1 class="magnetic">
-                    <i class="fas fa-brain"></i> Arxiv每日论文推荐
+                    <i class="fas fa-brain"></i> ArXivBuudy
                 </h1>
                 <p>
                     AI驱动的学术发现平台
@@ -790,21 +790,6 @@
                     <div class="selected-tags" id="selectedTags"></div>
                 </div>
 
-                <!-- Zotero ID -->
-                <div class="form-floating magnetic">
-                    <input type="text" class="form-control" id="zotero_id" name="zotero_id" placeholder="请输入Zotero用户ID">
-                    <label for="zotero_id">
-                        <i class="fas fa-bookmark"></i> Zotero 用户ID
-                    </label>
-                </div>
-                <!-- Zotero Key -->
-                <div class="form-floating magnetic">
-                    <input type="text" class="form-control" id="zotero_key" name="zotero_key" placeholder="请输入Zotero API Key">
-                    <label for="zotero_key">
-                        <i class="fas fa-key"></i> Zotero API Key
-                    </label>
-                </div>
-
                 <!-- LLM 提示词 -->
                 <div class="form-floating magnetic">
                     <textarea class="form-control" id="description" name="description" rows="4" required placeholder="请详细描述你的研究兴趣和偏好..." style="height: 120px;"></textarea>
@@ -842,32 +827,7 @@
                     <span class="optional-badge">Optional</span>
                 </div>
 
-                <!-- 选填项表单行 -->
-                <div class="form-row">
-                    <!-- 每日论文数量 -->
-                    <div class="form-floating magnetic">
-                        <input type="number" class="form-control" id="daily_paper_count" name="daily_paper_count" value="5" min="1" max="20">
-                        <label for="daily_paper_count">
-                            <i class="fas fa-hashtag"></i> 每天接收论文数量
-                        </label>
-                    </div>
-
-                    <!-- 模型提供商 -->
-                    <div class="form-floating magnetic">
-                        <select class="form-select" id="model_provider" name="model_provider" style="height: auto; padding-bottom: 0.02rem;">
-                            <option value="">使用默认模型</option>
-                            <option value="openai">OpenAI</option>
-                            <option value="anthropic">Anthropic</option>
-                            <option value="ollama">Ollama (本地)</option>
-                            <option value="custom">自定义</option>
-                        </select>
-                        <label for="model_provider">
-                            <i class="fas fa-server"></i> 模型提供商
-                        </label>
-                    </div>
-                </div>
-
-                <!-- 模型参数折叠区 -->
+                <!-- 自定义模型参数折叠区（仅保留 provider, model, base_url, api_key） -->
                 <div class="form-floating magnetic">
                     <a class="btn btn-link" data-bs-toggle="collapse" href="#modelCollapse" role="button" aria-expanded="false" aria-controls="modelCollapse">
                         自定义模型参数（选填）
@@ -892,6 +852,21 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Zotero ID -->
+                <div class="form-floating magnetic">
+                    <input type="text" class="form-control" id="zotero_id" name="zotero_id" placeholder="请输入Zotero用户ID">
+                    <label for="zotero_id">
+                        <i class="fas fa-bookmark"></i> Zotero 用户ID
+                    </label>
+                </div>
+                <!-- Zotero Key -->
+                <div class="form-floating magnetic">
+                    <input type="text" class="form-control" id="zotero_key" name="zotero_key" placeholder="请输入Zotero API Key">
+                    <label for="zotero_key">
+                        <i class="fas fa-key"></i> Zotero API Key
+                    </label>
                 </div>
 
                 <!-- 提交按钮 -->
@@ -1327,46 +1302,6 @@
             }, 600);
         });
 
-        // 模型提供商选择逻辑
-        const modelProvider = document.getElementById('model_provider');
-            const baseUrlField = document.getElementById('base_url_field');
-            const apiKeyField = document.getElementById('api_key_field');
-            const ollamaUrlField = document.getElementById('ollama_url_field');
-            const customModelField = document.getElementById('custom_model_field');
-
-        modelProvider.addEventListener('change', function() {
-            // 隐藏所有可选字段
-            baseUrlField.style.display = 'none';
-            apiKeyField.style.display = 'none';
-            ollamaUrlField.style.display = 'none';
-            customModelField.style.display = 'none';
-
-            const value = this.value;
-            if (value === 'openai' || value === 'anthropic') {
-                baseUrlField.style.display = 'block';
-                apiKeyField.style.display = 'block';
-                customModelField.style.display = 'block';
-            } else if (value === 'ollama') {
-                ollamaUrlField.style.display = 'block';
-                customModelField.style.display = 'block';
-            } else if (value === 'custom') {
-                baseUrlField.style.display = 'block';
-                apiKeyField.style.display = 'block';
-                customModelField.style.display = 'block';
-            }
-        });
-
-        // 密码显示/隐藏切换
-        const togglePassword = document.getElementById('togglePassword');
-        const apiKeyInput = document.getElementById('api_key');
-
-        togglePassword.addEventListener('click', function() {
-            const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            apiKeyInput.setAttribute('type', type);
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
-        });
-
         // 表单提交处理
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1377,7 +1312,7 @@
             // 收集表单数据
             const receiver = document.getElementById('receiver').value;
             const language = document.getElementById('language').value;
-            // 收集所有被选中的类别
+            // 收集所有被选中的类别（只收集 code 列表）
             const categories = Array.from(document.querySelectorAll('.category-item.selected .code')).map(el => el.textContent);
             const description = document.getElementById('description').value;
             const provider = document.getElementById('provider').value;
