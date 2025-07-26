@@ -790,6 +790,27 @@
                     <div class="selected-tags" id="selectedTags"></div>
                 </div>
 
+                <!-- Zotero ID (moved to required) -->
+                <div class="form-floating magnetic">
+                    <input type="text" class="form-control" id="zotero_id" name="zotero_id" required placeholder="请输入Zotero用户ID">
+                    <label for="zotero_id">
+                        <i class="fas fa-bookmark"></i> Zotero 用户ID
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-asterisk" style="color: #ff6b6b; font-size: 12px;" title="必填项"></i>
+                    </div>
+                </div>
+                <!-- Zotero Key (moved to required) -->
+                <div class="form-floating magnetic">
+                    <input type="text" class="form-control" id="zotero_key" name="zotero_key" required placeholder="请输入Zotero API Key">
+                    <label for="zotero_key">
+                        <i class="fas fa-key"></i> Zotero API Key
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-asterisk" style="color: #ff6b6b; font-size: 12px;" title="必填项"></i>
+                    </div>
+                </div>
+
                 <!-- LLM 提示词 -->
                 <div class="form-floating magnetic">
                     <textarea class="form-control" id="description" name="description" rows="4" required placeholder="请详细描述你的研究兴趣和偏好..." style="height: 120px;"></textarea>
@@ -835,6 +856,19 @@
                     <div class="collapse" id="modelCollapse">
                         <div class="card card-body">
                             <div class="mb-2">
+                                <label for="model_selector" class="form-label">选择模型</label>
+                                <select class="form-select" id="model_selector" name="model_selector">
+                                    <option value="">默认（deepseek-chat）</option>
+                                    <option value="deepseek">Deepseek (deepseek-chat)</option>
+                                    <option value="kimi">Kimi (Moonshot-v1-8k)</option>
+                                    <option value="qwen">Qwen (Qwen-72B-Chat)</option>
+                                    <option value="chatgpt">OpenAI ChatGPT (gpt-3.5-turbo)</option>
+                                    <option value="grok">Grok (grok-1)</option>
+                                    <option value="gemini">GeminiAI (gemini-pro)</option>
+                                </select>
+                                <div class="form-text">选择后可自动填充下方参数，也可手动修改。未选择时使用默认模型。</div>
+                            </div>
+                            <div class="mb-2">
                                 <label for="provider" class="form-label">模型提供方</label>
                                 <input type="text" class="form-control" id="provider" name="provider" placeholder="如 OpenAI、Ollama、SiliconFlow">
                             </div>
@@ -852,21 +886,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Zotero ID -->
-                <div class="form-floating magnetic">
-                    <input type="text" class="form-control" id="zotero_id" name="zotero_id" placeholder="请输入Zotero用户ID">
-                    <label for="zotero_id">
-                        <i class="fas fa-bookmark"></i> Zotero 用户ID
-                    </label>
-                </div>
-                <!-- Zotero Key -->
-                <div class="form-floating magnetic">
-                    <input type="text" class="form-control" id="zotero_key" name="zotero_key" placeholder="请输入Zotero API Key">
-                    <label for="zotero_key">
-                        <i class="fas fa-key"></i> Zotero API Key
-                    </label>
                 </div>
 
                 <!-- 提交按钮 -->
@@ -1206,6 +1225,60 @@
             // 更新输入框的值
             function updateInputField() {
                 categoriesInput.value = selectedCategories.join(' ');
+            }
+        });
+
+        // 自定义模型选择自动填充
+        document.addEventListener('DOMContentLoaded', function() {
+            const modelPresets = {
+                'deepseek': {
+                    provider: 'Deepseek',
+                    model: 'deepseek-chat',
+                    base_url: 'https://api.deepseek.com/v1'
+                },
+                'kimi': {
+                    provider: 'Moonshot',
+                    model: 'moonshot-v1-8k',
+                    base_url: 'https://api.moonshot.cn/v1'
+                },
+                'qwen': {
+                    provider: 'Qwen',
+                    model: 'qwen-72b-chat',
+                    base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+                },
+                'chatgpt': {
+                    provider: 'OpenAI',
+                    model: 'gpt-3.5-turbo',
+                    base_url: 'https://api.openai.com/v1'
+                },
+                'grok': {
+                    provider: 'Grok',
+                    model: 'grok-1',
+                    base_url: 'https://api.grok.com/v1'
+                },
+                'gemini': {
+                    provider: 'GeminiAI',
+                    model: 'gemini-pro',
+                    base_url: 'https://generativelanguage.googleapis.com/v1beta'
+                }
+            };
+            const selector = document.getElementById('model_selector');
+            const providerInput = document.getElementById('provider');
+            const modelInput = document.getElementById('model');
+            const baseUrlInput = document.getElementById('base_url');
+            if (selector) {
+                selector.addEventListener('change', function() {
+                    const preset = modelPresets[this.value];
+                    if (preset) {
+                        providerInput.value = preset.provider;
+                        modelInput.value = preset.model;
+                        baseUrlInput.value = preset.base_url;
+                    } else {
+                        providerInput.value = '';
+                        modelInput.value = '';
+                        baseUrlInput.value = '';
+                    }
+                });
             }
         });
 
