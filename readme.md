@@ -1,4 +1,6 @@
 # ArXivBuddy
+![](logo.png)
+
 
 ## 一、项目简介
 
