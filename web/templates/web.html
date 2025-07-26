@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arxiv每日论文推荐 - AI驱动的学术发现</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+            --dark-bg: #1a1a2e;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            cursor: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* 自定义鼠标光标 */
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .cursor-follower {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .cursor.hover {
+            transform: scale(1.5);
+            background: rgba(102, 126, 234, 0.8);
+        }
+
+        .cursor-follower.hover {
+            transform: scale(1.2);
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        .mouse-trail {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9997;
+            animation: trailFade 0.8s ease-out forwards;
+        }
+
+        @keyframes trailFade {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="20" cy="80" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* 浮动形状 */
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        .shape:nth-child(1) { 
+            width: clamp(40px, 15vw, 80px); 
+            height: clamp(40px, 15vw, 80px); 
+            top: 20%; 
+            left: 10%; 
+            animation-delay: 0s; 
+        }
+
+        .shape:nth-child(2) { 
+            width: clamp(30px, 10vw, 60px); 
+            height: clamp(30px, 10vw, 60px); 
+            top: 60%; 
+            left: 80%; 
+            animation-delay: 5s; 
+        }
+
+        .shape:nth-child(3) { 
+            width: clamp(20px, 8vw, 40px); 
+            height: clamp(20px, 8vw, 40px); 
+            top: 80%; 
+            left: 20%; 
+            animation-delay: 10s; 
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg); 
+            }
+            33% { 
+                transform: translateY(-30px) rotate(120deg); 
+            }
+            66% { 
+                transform: translateY(20px) rotate(240deg); 
+            }
+        }
+
+        /* 容器和卡片 */
+        .container {
+            max-width: 800px;
+            margin: clamp(20px, 5vw, 40px) auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1),
+                        0 0 0 1px rgba(255, 255, 255, 0.2);
+            padding: clamp(30px, 8vw, 40px);
+            position: relative;
+            overflow: visible;
+            animation: slideUp 0.8s ease-out;
+            transition: transform 0.3s ease;
+            z-index: 10;
+        }
+
+        .main-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15),
+                        0 0 0 1px rgba(255, 255, 255, 0.3);
+        }
+
+        .main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 头部样式 */
+        .header {
+            text-align: center;
+            margin-bottom: clamp(30px, 8vw, 40px);
+        }
+
+        .header h1 {
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            font-weight: 400;
+        }
+
+        /* 分组标题样式 */
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 30px 0 20px 0;
+            padding: 12px 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title.required {
+            background: rgba(255, 107, 107, 0.1);
+            border-left-color: #ff6b6b;
+        }
+
+        .section-title.optional {
+            background: rgba(255, 193, 7, 0.1);
+            border-left-color: #ffc107;
+        }
+
+        .required-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .optional-badge {
+            background: #ffc107;
+            color: #333;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* 表单样式 */
+        .form-floating {
+            margin-bottom: clamp(18px, 5vw, 24px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-floating .form-control,
+        .form-floating .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: clamp(16px, 4vw, 18px) clamp(16px, 4vw, 20px);
+            font-size: clamp(16px, 4vw, 17px);
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            min-height: 60px;
+        }
+
+        .form-floating .form-control:focus,
+        .form-floating .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .form-floating label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding-left: clamp(16px, 4vw, 20px);
+            font-size: clamp(14px, 3vw, 16px);
+        }
+
+        .input-icon {
+            position: absolute;
+            right: clamp(12px, 3vw, 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            z-index: 10;
+            font-size: 18px;
+        }
+
+        /* 按钮样式 */
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 12px;
+            padding: clamp(16px, 4vw, 18px) clamp(24px, 6vw, 32px);
+            font-size: clamp(16px, 4vw, 17px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 60px;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        /* 表单行 */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(15px, 4vw, 20px);
+        }
+
+        /* 结果区域 */
+        .result-area {
+            margin-top: clamp(30px, 8vw, 40px);
+        }
+
+        .loading-container {
+            text-align: center;
+            padding: clamp(30px, 8vw, 40px);
+            display: none;
+        }
+
+        .custom-spinner {
+            width: clamp(40px, 10vw, 60px);
+            height: clamp(40px, 10vw, 60px);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { 
+                transform: rotate(0deg); 
+            }
+            100% { 
+                transform: rotate(360deg); 
+            }
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: 500;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: clamp(20px, 5vw, 30px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 警告框 */
+        .alert {
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            font-weight: 500;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: white;
+        }
+
+        /* 功能徽章 */
+        .feature-badge {
+            display: inline-block;
+            background: var(--success-gradient);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 10px;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { 
+                background-position: -200px 0; 
+            }
+            100% { 
+                background-position: 200px 0; 
+            }
+        }
+
+        /* 磁性效果 */
+        .magnetic {
+            transition: transform 0.3s ease;
+        }
+
+        .magnetic:hover {
+            transform: scale(1.05);
+        }
+
+        /* 类别选择器样式 */
+        .category-selector {
+            position: relative;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        /* 下拉菜单容器 - 添加到body顶层 */
+        .category-dropdown-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999999;
+            pointer-events: none;
+            display: none;
+        }
+
+        .category-dropdown-container.show {
+            display: block;
+        }
+
+        .category-dropdown {
+            position: absolute;
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            border: 1px solid #e2e8f0;
+            pointer-events: auto;
+        }
+
+        .category-group {
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        .category-group:last-child {
+            border-bottom: none;
+        }
+
+        .category-group-title {
+            padding: 12px 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .category-group-title:hover {
+            background: #e9ecef;
+        }
+
+        .category-group-title i {
+            transition: transform 0.3s ease;
+        }
+
+        .category-group-title.collapsed i {
+            transform: rotate(-90deg);
+        }
+
+        .category-items {
+            display: none;
+            background: white;
+        }
+
+        .category-group.expanded .category-items {
+            display: block;
+        }
+
+        .category-item {
+            padding: 10px 20px 10px 30px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .category-item:hover {
+            background: #f8f9fa;
+            border-left-color: #667eea;
+        }
+
+        .category-item.selected {
+            background: rgba(102, 126, 234, 0.1);
+            border-left-color: #667eea;
+        }
+
+        .category-item .code {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+
+        .category-item .desc {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            margin-left: 10px;
+            flex: 1;
+        }
+
+        /* 已选标签 */
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .selected-tag {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .selected-tag:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .selected-tag i {
+            cursor: pointer;
+            font-size: 0.8em;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .selected-tag i:hover {
+            opacity: 1;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .main-card {
+                margin: 15px;
+                padding: 25px 15px;
+                border-radius: 20px;
+            }
+
+            .form-floating .form-control,
+            .form-floating .form-select {
+                min-height: 60px;
+                padding: 18px 16px;
+            }
+
+            .btn-primary {
+                min-height: 60px;
+                padding: 18px 24px;
+            }
+
+            #llm_prompt {
+                min-height: 140px !important;
+            }
+
+            body {
+                cursor: auto;
+            }
+
+            .cursor, 
+            .cursor-follower, 
+            .mouse-trail {
+                display: none !important;
+            }
+
+            .result-card {
+                padding: 20px 15px;
+            }
+
+            .header {
+                margin-bottom: 30px;
+            }
+
+            .form-floating {
+                margin-bottom: 18px;
+            }
+
+            html, body {
+                overflow-x: hidden;
+                -webkit-tap-highlight-color: rgba(0,0,0,0);
+            }
+
+            .btn-primary {
+                letter-spacing: normal;
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 1.1rem;
+                margin: 25px 0 15px 0;
+                padding: 10px 15px;
+            }
+
+            .category-dropdown {
+                max-height: 300px;
+            }
+
+            .category-item {
+                padding: 8px 15px 8px 25px;
+            }
+
+            .category-item .desc {
+                font-size: 0.8em;
+            }
+        }
+
+        @media (max-width: 375px) {
+            .header h1 {
+                font-size: 1.6rem;
+            }
+
+            .feature-badge {
+                display: block;
+                margin-left: 0;
+                margin-top: 10px;
+                display: inline-block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 自定义鼠标光标 -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- 浮动形状 -->
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <!-- 下拉菜单容器 - 添加到body顶层 -->
+    <div class="category-dropdown-container" id="categoryDropdownContainer">
+        <div class="category-dropdown" id="categoryDropdown">
+            <!-- 这里将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-card">
+            <!-- 头部 -->
+            <div class="header">
+                <h1 class="magnetic">
+                    <i class="fas fa-brain"></i> Arxiv每日论文推荐
+                </h1>
+                <p>
+                    AI驱动的学术发现平台
+                    <span class="feature-badge magnetic">Beta</span>
+                </p>
+            </div>
+
+            <form id="arxivForm">
+                <!-- 必填项部分 -->
+                <div class="section-title required">
+                    <i class="fas fa-exclamation-circle"></i>必填项
+                    <span class="required-badge">Required</span>
+                </div>
+
+                <!-- 邮箱输入 -->
+                <div class="form-floating magnetic">
+                    <input type="email" class="form-control" id="receiver" name="receiver" required placeholder="your@email.com">
+                    <label for="receiver">
+                        <i class="fas fa-envelope"></i> 收件邮箱
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-asterisk" style="color: #ff6b6b; font-size: 12px;" title="必填项"></i>
+                    </div>
+                </div>
+
+                <!-- 类别选择 -->
+                <div class="form-floating magnetic">
+                    <div class="category-selector">
+                        <input type="text" class="form-control" id="categories" name="categories" required placeholder="点击选择感兴趣的arXiv类别" readonly>
+                        <label for="categories">
+                            <i class="fas fa-tags"></i> 感兴趣的 arXiv 类别
+                        </label>
+                        <div class="input-icon">
+                            <i class="fas fa-asterisk" style="color: #ff6b6b; font-size: 12px;" title="必填项"></i>
+                        </div>
+                    </div>
+                    <div class="selected-tags" id="selectedTags"></div>
+                </div>
+
+                <!-- Zotero ID -->
+                <div class="form-floating magnetic">
+                    <input type="text" class="form-control" id="zotero_id" name="zotero_id" placeholder="请输入Zotero用户ID">
+                    <label for="zotero_id">
+                        <i class="fas fa-bookmark"></i> Zotero 用户ID
+                    </label>
+                </div>
+                <!-- Zotero Key -->
+                <div class="form-floating magnetic">
+                    <input type="text" class="form-control" id="zotero_key" name="zotero_key" placeholder="请输入Zotero API Key">
+                    <label for="zotero_key">
+                        <i class="fas fa-key"></i> Zotero API Key
+                    </label>
+                </div>
+
+                <!-- LLM 提示词 -->
+                <div class="form-floating magnetic">
+                    <textarea class="form-control" id="description" name="description" rows="4" required placeholder="请详细描述你的研究兴趣和偏好..." style="height: 120px;"></textarea>
+                    <label for="description">
+                        <i class="fas fa-lightbulb"></i> 自定义提示词（研究兴趣描述）
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-asterisk" style="color: #ff6b6b; font-size: 12px;" title="必填项"></i>
+                    </div>
+                </div>
+
+                <!-- 语言选择 -->
+                <div class="form-floating magnetic">
+                    <select class="form-select" id="language" name="language" required style="height: auto; padding-bottom: 0.02rem;">
+                        <option value="zh">中文 (Chinese)</option>
+                        <option value="en">English (英语)</option>
+                        <option value="ja">日本語 (Japanese)</option>
+                        <option value="ko">한국어 (Korean)</option>
+                        <option value="fr">Français (French)</option>
+                        <option value="de">Deutsch (German)</option>
+                        <option value="es">Español (Spanish)</option>
+                        <option value="ru">Русский (Russian)</option>
+                    </select>
+                    <label for="language">
+                        <i class="fas fa-language"></i> 邮件语言
+                    </label>
+                    <div class="input-icon">
+                        <i class="fas fa-asterisk" style="color: #ff6b6b; font-size: 12px;" title="必填项"></i>
+                    </div>
+                </div>
+
+                <!-- 选填项部分 -->
+                <div class="section-title optional">
+                    <i class="fas fa-cog"></i>选填项
+                    <span class="optional-badge">Optional</span>
+                </div>
+
+                <!-- 选填项表单行 -->
+                <div class="form-row">
+                    <!-- 每日论文数量 -->
+                    <div class="form-floating magnetic">
+                        <input type="number" class="form-control" id="daily_paper_count" name="daily_paper_count" value="5" min="1" max="20">
+                        <label for="daily_paper_count">
+                            <i class="fas fa-hashtag"></i> 每天接收论文数量
+                        </label>
+                    </div>
+
+                    <!-- 模型提供商 -->
+                    <div class="form-floating magnetic">
+                        <select class="form-select" id="model_provider" name="model_provider" style="height: auto; padding-bottom: 0.02rem;">
+                            <option value="">使用默认模型</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="ollama">Ollama (本地)</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                        <label for="model_provider">
+                            <i class="fas fa-server"></i> 模型提供商
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 模型参数折叠区 -->
+                <div class="form-floating magnetic">
+                    <a class="btn btn-link" data-bs-toggle="collapse" href="#modelCollapse" role="button" aria-expanded="false" aria-controls="modelCollapse">
+                        自定义模型参数（选填）
+                    </a>
+                    <div class="collapse" id="modelCollapse">
+                        <div class="card card-body">
+                            <div class="mb-2">
+                                <label for="provider" class="form-label">模型提供方</label>
+                                <input type="text" class="form-control" id="provider" name="provider" placeholder="如 OpenAI、Ollama、SiliconFlow">
+                            </div>
+                            <div class="mb-2">
+                                <label for="model" class="form-label">模型名称</label>
+                                <input type="text" class="form-control" id="model" name="model" placeholder="如 deepseek-chat">
+                            </div>
+                            <div class="mb-2">
+                                <label for="base_url" class="form-label">Base URL</label>
+                                <input type="text" class="form-control" id="base_url" name="base_url" placeholder="如 https://api.deepseek.com/v1">
+                            </div>
+                            <div class="mb-2">
+                                <label for="api_key" class="form-label">API Key</label>
+                                <input type="text" class="form-control" id="api_key" name="api_key" placeholder="API 密钥">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary magnetic">
+                        <i class="fas fa-paper-plane"></i> 订阅每日论文推荐
+                    </button>
+                </div>
+
+                <!-- 进度条 -->
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </form>
+
+            <!-- 结果区域 -->
+            <div class="result-area">
+                <div class="loading-container" id="loadingContainer">
+                    <div class="custom-spinner"></div>
+                    <div class="loading-text">正在配置您的每日论文推荐...</div>
+                </div>
+                <div id="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // arXiv类别数据 - 基于官方分类
+        const arxivCategories = {
+            "Computer Science": {
+                "cs.AI": "人工智能",
+                "cs.AR": "硬件架构", 
+                "cs.CC": "计算复杂性",
+                "cs.CE": "计算工程、金融和科学",
+                "cs.CG": "计算几何",
+                "cs.CL": "计算与语言",
+                "cs.CR": "密码学与安全",
+                "cs.CV": "计算机视觉与模式识别",
+                "cs.CY": "计算机与社会",
+                "cs.DB": "数据库",
+                "cs.DC": "分布式、并行和集群计算",
+                "cs.DL": "数字图书馆",
+                "cs.DM": "离散数学",
+                "cs.DS": "数据结构与算法",
+                "cs.ET": "新兴技术",
+                "cs.FL": "形式语言与自动机理论",
+                "cs.GL": "通用文献",
+                "cs.GR": "图形学",
+                "cs.GT": "计算机科学与博弈论",
+                "cs.HC": "人机交互",
+                "cs.IR": "信息检索",
+                "cs.IT": "信息论",
+                "cs.LG": "机器学习",
+                "cs.LO": "计算机科学中的逻辑",
+                "cs.MA": "多智能体系统",
+                "cs.MM": "多媒体",
+                "cs.MS": "数学软件",
+                "cs.NA": "数值分析",
+                "cs.NE": "神经与进化计算",
+                "cs.NI": "网络与互联网架构",
+                "cs.OH": "其他计算机科学",
+                "cs.OS": "操作系统",
+                "cs.PF": "性能",
+                "cs.PL": "编程语言",
+                "cs.RO": "机器人学",
+                "cs.SC": "符号计算",
+                "cs.SD": "声音",
+                "cs.SE": "软件工程",
+                "cs.SI": "社会与信息网络",
+                "cs.SY": "系统与控制"
+            },
+            "Economics": {
+                "econ.EM": "计量经济学",
+                "econ.GN": "通用经济学",
+                "econ.TH": "理论经济学"
+            },
+            "Electrical Engineering and Systems Science": {
+                "eess.AS": "音频与语音处理",
+                "eess.IV": "图像与视频处理",
+                "eess.SP": "信号处理",
+                "eess.SY": "系统与控制"
+            },
+            "Mathematics": {
+                "math.AC": "交换代数",
+                "math.AG": "代数几何",
+                "math.AP": "偏微分方程分析",
+                "math.AT": "代数拓扑",
+                "math.CA": "经典分析与常微分方程",
+                "math.CO": "组合数学",
+                "math.CT": "范畴论",
+                "math.CV": "复变函数",
+                "math.DG": "微分几何",
+                "math.DS": "动力系统",
+                "math.FA": "泛函分析",
+                "math.GM": "通用数学",
+                "math.GN": "通用拓扑",
+                "math.GR": "群论",
+                "math.GT": "几何拓扑",
+                "math.HO": "历史与概述",
+                "math.IT": "信息论",
+                "math.KT": "K理论与同调",
+                "math.LO": "逻辑",
+                "math.MG": "度量几何",
+                "math.MP": "数学物理",
+                "math.NA": "数值分析",
+                "math.NT": "数论",
+                "math.OA": "算子代数",
+                "math.OC": "优化与控制",
+                "math.PR": "概率论",
+                "math.QA": "量子代数",
+                "math.RA": "环与代数",
+                "math.RT": "表示论",
+                "math.SG": "辛几何",
+                "math.SP": "谱理论",
+                "math.ST": "统计理论"
+            },
+            "Physics": {
+                "astro-ph.CO": "宇宙学与非星系天体物理学",
+                "astro-ph.EP": "地球与行星天体物理学",
+                "astro-ph.GA": "星系天体物理学",
+                "astro-ph.HE": "高能天体物理现象",
+                "astro-ph.IM": "天体物理仪器与方法",
+                "astro-ph.SR": "太阳与恒星天体物理学",
+                "cond-mat.dis-nn": "无序系统与神经网络",
+                "cond-mat.mes-hall": "介观与纳米尺度物理",
+                "cond-mat.mtrl-sci": "材料科学",
+                "cond-mat.other": "其他凝聚态物理",
+                "cond-mat.quant-gas": "量子气体",
+                "cond-mat.soft": "软凝聚态物质",
+                "cond-mat.stat-mech": "统计力学",
+                "cond-mat.str-el": "强关联电子",
+                "cond-mat.supr-con": "超导性",
+                "gr-qc": "广义相对论与量子宇宙学",
+                "hep-ex": "高能物理实验",
+                "hep-lat": "高能物理-格点",
+                "hep-ph": "高能物理-现象学",
+                "hep-th": "高能物理-理论",
+                "math-ph": "数学物理",
+                "nlin.AO": "适应与自组织系统",
+                "nlin.CD": "混沌动力学",
+                "nlin.CG": "元胞自动机与格子气体",
+                "nlin.PS": "模式形成与孤子",
+                "nlin.SI": "精确可解与可积系统",
+                "nucl-ex": "核实验",
+                "nucl-th": "核理论",
+                "physics.acc-ph": "加速器物理",
+                "physics.ao-ph": "大气与海洋物理",
+                "physics.app-ph": "应用物理",
+                "physics.atm-clus": "原子与分子团簇",
+                "physics.atom-ph": "原子物理",
+                "physics.bio-ph": "生物物理",
+                "physics.chem-ph": "化学物理",
+                "physics.class-ph": "经典物理",
+                "physics.comp-ph": "计算物理",
+                "physics.data-an": "数据分析、统计与概率",
+                "physics.ed-ph": "物理教育",
+                "physics.flu-dyn": "流体动力学",
+                "physics.gen-ph": "通用物理",
+                "physics.geo-ph": "地球物理",
+                "physics.hist-ph": "物理历史与哲学",
+                "physics.ins-det": "仪器与探测器",
+                "physics.med-ph": "医学物理",
+                "physics.optics": "光学",
+                "physics.plasm-ph": "等离子体物理",
+                "physics.pop-ph": "大众物理",
+                "physics.soc-ph": "物理与社会",
+                "physics.space-ph": "空间物理",
+                "quant-ph": "量子物理"
+            },
+            "Quantitative Biology": {
+                "q-bio.BM": "生物分子",
+                "q-bio.CB": "细胞行为",
+                "q-bio.GN": "基因组学",
+                "q-bio.MN": "分子网络",
+                "q-bio.NC": "神经元与认知",
+                "q-bio.OT": "其他定量生物学",
+                "q-bio.PE": "种群与进化",
+                "q-bio.QM": "定量方法",
+                "q-bio.SC": "亚细胞过程",
+                "q-bio.TO": "组织与器官"
+            },
+            "Quantitative Finance": {
+                "q-fin.CP": "计算金融",
+                "q-fin.EC": "经济学",
+                "q-fin.GN": "通用金融",
+                "q-fin.MF": "数学金融",
+                "q-fin.PM": "投资组合管理",
+                "q-fin.PR": "证券定价",
+                "q-fin.RM": "风险管理",
+                "q-fin.ST": "统计金融",
+                "q-fin.TR": "交易与市场微观结构"
+            },
+            "Statistics": {
+                "stat.AP": "应用",
+                "stat.CO": "计算",
+                "stat.ME": "方法学",
+                "stat.ML": "机器学习",
+                "stat.OT": "其他统计",
+                "stat.TH": "统计理论"
+            }
+        };
+
+        // 初始化类别选择器
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoriesInput = document.getElementById('categories');
+            const categoryDropdownContainer = document.getElementById('categoryDropdownContainer');
+            const categoryDropdown = document.getElementById('categoryDropdown');
+            const selectedTagsContainer = document.getElementById('selectedTags');
+            let selectedCategories = [];
+
+            // 生成下拉菜单
+            for (const [groupName, categories] of Object.entries(arxivCategories)) {
+                const groupElement = document.createElement('div');
+                groupElement.className = 'category-group';
+
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'category-group-title collapsed';
+                groupTitle.innerHTML = `${groupName}<i class="fas fa-chevron-down"></i>`;
+
+                const itemsContainer = document.createElement('div');
+                itemsContainer.className = 'category-items';
+
+                for (const [code, description] of Object.entries(categories)) {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'category-item';
+                    itemElement.innerHTML = `
+                        <span class="code">${code}</span>
+                        <span class="desc">(${description})</span>
+                    `;
+
+                    itemElement.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (!selectedCategories.includes(code)) {
+                            selectedCategories.push(code);
+                            this.classList.add('selected');
+                            updateSelectedTags();
+                            updateInputField();
+                        }
+                        // 选择后关闭下拉菜单
+                        categoryDropdownContainer.classList.remove('show');
+                    });
+
+                    itemsContainer.appendChild(itemElement);
+                }
+
+                groupTitle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    this.classList.toggle('collapsed');
+                    groupElement.classList.toggle('expanded');
+                });
+
+                groupElement.appendChild(groupTitle);
+                groupElement.appendChild(itemsContainer);
+                categoryDropdown.appendChild(groupElement);
+            }
+
+            // 显示/隐藏下拉菜单
+            categoriesInput.addEventListener('click', function(e) {
+                e.stopPropagation();
+
+                // 获取输入框的位置信息
+                const rect = this.getBoundingClientRect();
+
+                // 设置下拉菜单的位置
+                categoryDropdown.style.top = (rect.bottom + 2) + 'px';
+                categoryDropdown.style.left = rect.left + 'px';
+                categoryDropdown.style.width = rect.width + 'px';
+
+                // 重置所有分组为折叠状态
+                document.querySelectorAll('.category-group').forEach(group => {
+                    group.classList.remove('expanded');
+                    group.querySelector('.category-group-title').classList.add('collapsed');
+                });
+
+                categoryDropdownContainer.classList.toggle('show');
+            });
+
+            // 点击容器外部关闭下拉菜单
+            categoryDropdownContainer.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                }
+            });
+
+            // 点击其他地方关闭下拉菜单
+            document.addEventListener('click', function(e) {
+                if (!categoryDropdown.contains(e.target) && e.target !== categoriesInput) {
+                    categoryDropdownContainer.classList.remove('show');
+                }
+            });
+
+            // 阻止下拉菜单内部点击事件冒泡
+            categoryDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+
+            // 窗口大小改变时重新定位下拉菜单
+            window.addEventListener('resize', function() {
+                if (categoryDropdownContainer.classList.contains('show')) {
+                    const rect = categoriesInput.getBoundingClientRect();
+                    categoryDropdown.style.top = (rect.bottom + 2) + 'px';
+                    categoryDropdown.style.left = rect.left + 'px';
+                    categoryDropdown.style.width = rect.width + 'px';
+                }
+            });
+
+            // 更新已选标签显示
+            function updateSelectedTags() {
+                selectedTagsContainer.innerHTML = '';
+                selectedCategories.forEach(category => {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'selected-tag';
+                    tagElement.innerHTML = `${category}<i class="fas fa-times" data-category="${category}"></i>`;
+                    selectedTagsContainer.appendChild(tagElement);
+                });
+
+                // 添加删除标签的事件监听
+                document.querySelectorAll('.selected-tag i').forEach(icon => {
+                    icon.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const categoryToRemove = this.getAttribute('data-category');
+                        selectedCategories = selectedCategories.filter(cat => cat !== categoryToRemove);
+
+                        // 移除对应项目的选中状态
+                        document.querySelectorAll('.category-item').forEach(item => {
+                            if (item.querySelector('.code').textContent === categoryToRemove) {
+                                item.classList.remove('selected');
+                            }
+                        });
+
+                        updateSelectedTags();
+                        updateInputField();
+                    });
+                });
+            }
+
+            // 更新输入框的值
+            function updateInputField() {
+                categoriesInput.value = selectedCategories.join(' ');
+            }
+        });
+
+        const form = document.getElementById('arxivForm');
+        const resultDiv = document.getElementById('result');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+
+        // 检测是否为移动设备
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        // 鼠标跟随效果 - 仅在桌面设备启用
+        if (!isMobile) {
+            const cursor = document.querySelector('.cursor');
+            const cursorFollower = document.querySelector('.cursor-follower');
+            let mouseX = 0, mouseY = 0;
+            let followerX = 0, followerY = 0;
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+
+                cursor.style.left = mouseX - 10 + 'px';
+                cursor.style.top = mouseY - 10 + 'px';
+
+                if (Math.random() > 0.8) {
+                    createTrailParticle(mouseX, mouseY);
+                }
+            });
+
+            function animateFollower() {
+                const speed = 0.2;
+                followerX += (mouseX - followerX) * speed;
+                followerY += (mouseY - followerY) * speed;
+
+                cursorFollower.style.left = followerX - 20 + 'px';
+                cursorFollower.style.top = followerY - 20 + 'px';
+
+                requestAnimationFrame(animateFollower);
+            }
+            animateFollower();
+
+            function createTrailParticle(x, y) {
+                const particle = document.createElement('div');
+                particle.className = 'mouse-trail';
+                particle.style.left = x - 3 + 'px';
+                particle.style.top = y - 3 + 'px';
+                document.body.appendChild(particle);
+
+                setTimeout(() => {
+                    particle.remove();
+                }, 800);
+            }
+
+            const hoverElements = document.querySelectorAll('button, .form-control, .form-select, .magnetic, a, .input-icon');
+            hoverElements.forEach(element => {
+                element.addEventListener('mouseenter', () => {
+                    cursor.classList.add('hover');
+                    cursorFollower.classList.add('hover');
+                });
+
+                element.addEventListener('mouseleave', () => {
+                    cursor.classList.remove('hover');
+                    cursorFollower.classList.remove('hover');
+                });
+            });
+        }
+
+        // 点击波纹效果
+        document.addEventListener('click', (e) => {
+            const ripple = document.createElement('div');
+            ripple.style.position = 'fixed';
+            ripple.style.left = e.clientX - 25 + 'px';
+            ripple.style.top = e.clientY - 25 + 'px';
+            ripple.style.width = '50px';
+            ripple.style.height = '50px';
+            ripple.style.borderRadius = '50%';
+            ripple.style.background = 'rgba(255, 255, 255, 0.3)';
+            ripple.style.transform = 'scale(0)';
+            ripple.style.opacity = '1';
+            ripple.style.pointerEvents = 'none';
+            ripple.style.zIndex = '9999';
+            ripple.style.transition = 'transform 0.6s ease-out, opacity 0.6s ease-out';
+            document.body.appendChild(ripple);
+
+            setTimeout(() => {
+                ripple.style.transform = 'scale(3)';
+                ripple.style.opacity = '0';
+            }, 10);
+
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+
+        // 模型提供商选择逻辑
+        const modelProvider = document.getElementById('model_provider');
+            const baseUrlField = document.getElementById('base_url_field');
+            const apiKeyField = document.getElementById('api_key_field');
+            const ollamaUrlField = document.getElementById('ollama_url_field');
+            const customModelField = document.getElementById('custom_model_field');
+
+        modelProvider.addEventListener('change', function() {
+            // 隐藏所有可选字段
+            baseUrlField.style.display = 'none';
+            apiKeyField.style.display = 'none';
+            ollamaUrlField.style.display = 'none';
+            customModelField.style.display = 'none';
+
+            const value = this.value;
+            if (value === 'openai' || value === 'anthropic') {
+                baseUrlField.style.display = 'block';
+                apiKeyField.style.display = 'block';
+                customModelField.style.display = 'block';
+            } else if (value === 'ollama') {
+                ollamaUrlField.style.display = 'block';
+                customModelField.style.display = 'block';
+            } else if (value === 'custom') {
+                baseUrlField.style.display = 'block';
+                apiKeyField.style.display = 'block';
+                customModelField.style.display = 'block';
+            }
+        });
+
+        // 密码显示/隐藏切换
+        const togglePassword = document.getElementById('togglePassword');
+        const apiKeyInput = document.getElementById('api_key');
+
+        togglePassword.addEventListener('click', function() {
+            const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            apiKeyInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // 表单提交处理
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            resultDiv.innerHTML = '';
+            loadingContainer.style.display = 'block';
+            progressBar.style.display = 'block';
+            progressFill.style.width = '0%';
+            // 收集表单数据
+            const receiver = document.getElementById('receiver').value;
+            const language = document.getElementById('language').value;
+            // 收集所有被选中的类别
+            const categories = Array.from(document.querySelectorAll('.category-item.selected .code')).map(el => el.textContent);
+            const description = document.getElementById('description').value;
+            const provider = document.getElementById('provider').value;
+            const model = document.getElementById('model').value;
+            const base_url = document.getElementById('base_url').value;
+            const api_key = document.getElementById('api_key').value;
+            const zotero_id = document.getElementById('zotero_id').value;
+            const zotero_key = document.getElementById('zotero_key').value;
+            const modelObj = (provider || model || base_url || api_key) ? { provider, model, base_url, api_key } : undefined;
+            const payload = {
+                receiver,
+                language,
+                categories,
+                description,
+                zotero_id,
+                zotero_key,
+            };
+            if (modelObj) payload.model = modelObj;
+            resultDiv.innerHTML = '<div class="alert alert-info">正在处理，请稍候...</div>';
+            try {
+                const res = await fetch('/run_arxiv_daily', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                loadingContainer.style.display = 'none';
+                progressBar.style.display = 'none';
+                if (data.success) {
+                    resultDiv.innerHTML = '<div class="alert alert-success">' + data.msg + '</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="alert alert-danger">' + (data.msg || '发送失败') + '</div>';
+                }
+            } catch (err) {
+                loadingContainer.style.display = 'none';
+                progressBar.style.display = 'none';
+                resultDiv.innerHTML = '<div class="alert alert-danger">请求失败：' + err + '</div>';
+            }
+        });
+
+        // 移动端文本区域自适应高度
+        const textarea = document.getElementById('llm_prompt');
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                if (this.scrollHeight < 300) {
+                    this.style.height = this.scrollHeight + 'px';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

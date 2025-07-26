@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Arxiv Daily</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4">Arxiv Daily 邮件推送</h2>
+    <form id="arxivForm">
+        <div class="mb-3">
+            <label for="receiver" class="form-label">收件邮箱 <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="receiver" required>
+        </div>
+        <div class="mb-3">
+            <label for="language" class="form-label">邮件语言</label>
+            <select class="form-select" id="language">
+                <option value="zh">中文 (Chinese)</option>
+                <option value="en">English (英语)</option>
+                <option value="ja">日本語 (Japanese)</option>
+                <option value="ko">한국어 (Korean)</option>
+                <option value="fr">Français (French)</option>
+                <option value="de">Deutsch (German)</option>
+                <option value="es">Español (Spanish)</option>
+                <option value="ru">Русский (Russian)</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">arXiv 类别 <span class="text-danger">*</span></label>
+            <div id="category-tags" class="mb-2">
+                <span class="badge rounded-pill bg-secondary category-tag" data-value="cs.AI">cs.AI 人工智能</span>
+                <span class="badge rounded-pill bg-secondary category-tag" data-value="cs.CE">cs.CE 计算机工程</span>
+                <span class="badge rounded-pill bg-secondary category-tag" data-value="cs.CR">cs.CR 密码学与安全</span>
+                <span class="badge rounded-pill bg-secondary category-tag" data-value="cs.LG">cs.LG 机器学习</span>
+                <span class="badge rounded-pill bg-secondary category-tag" data-value="cs.CL">cs.CL 计算语言学</span>
+                <span class="badge rounded-pill bg-secondary category-tag" data-value="cs.CV">cs.CV 计算机视觉</span>
+                <span class="badge rounded-pill bg-secondary category-tag" data-value="stat.ML">stat.ML 统计机器学习</span>
+                <span class="badge rounded-pill bg-secondary category-tag" data-value="math.OC">math.OC 优化与控制</span>
+                <!-- 可根据需要添加更多类别 -->
+            </div>
+            <div class="form-text">点击标签选择类别，可多选</div>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">自定义提示词 <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="description" rows="8" required></textarea>
+        </div>
+        <div class="mb-3">
+            <a class="btn btn-link" data-bs-toggle="collapse" href="#modelCollapse" role="button" aria-expanded="false" aria-controls="modelCollapse">
+                自定义模型参数（选填）
+            </a>
+            <div class="collapse" id="modelCollapse">
+                <div class="card card-body">
+                    <div class="mb-2">
+                        <label for="provider" class="form-label">模型提供方</label>
+                        <input type="text" class="form-control" id="provider" placeholder="如 OpenAI、Ollama、SiliconFlow">
+                    </div>
+                    <div class="mb-2">
+                        <label for="model" class="form-label">模型名称</label>
+                        <input type="text" class="form-control" id="model" placeholder="如 deepseek-chat">
+                    </div>
+                    <div class="mb-2">
+                        <label for="base_url" class="form-label">Base URL</label>
+                        <input type="text" class="form-control" id="base_url" placeholder="如 https://api.deepseek.com/v1">
+                    </div>
+                    <div class="mb-2">
+                        <label for="api_key" class="form-label">API Key</label>
+                        <input type="text" class="form-control" id="api_key" placeholder="API 密钥">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="zotero_id" class="form-label">Zotero 用户ID</label>
+            <input type="text" class="form-control" id="zotero_id" placeholder="请输入Zotero用户ID">
+        </div>
+        <div class="mb-3">
+            <label for="zotero_key" class="form-label">Zotero API Key</label>
+            <input type="text" class="form-control" id="zotero_key" placeholder="请输入Zotero API Key">
+        </div>
+        <button type="submit" class="btn btn-primary">运行</button>
+    </form>
+    <div id="result" class="mt-4"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 类别标签点击选择逻辑
+    document.querySelectorAll('.category-tag').forEach(function(tag) {
+        tag.addEventListener('click', function() {
+            tag.classList.toggle('bg-primary');
+            tag.classList.toggle('bg-secondary');
+            tag.classList.toggle('text-white');
+        });
+    });
+
+    document.getElementById('arxivForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const receiver = document.getElementById('receiver').value;
+        const language = document.getElementById('language').value;
+        // 收集所有被选中的类别
+        const categories = Array.from(document.querySelectorAll('.category-tag.bg-primary')).map(tag => tag.getAttribute('data-value'));
+        const description = document.getElementById('description').value;
+        const provider = document.getElementById('provider').value;
+        const model = document.getElementById('model').value;
+        const base_url = document.getElementById('base_url').value;
+        const api_key = document.getElementById('api_key').value;
+        const zotero_id = document.getElementById('zotero_id').value;
+        const zotero_key = document.getElementById('zotero_key').value;
+        const modelObj = (provider || model || base_url || api_key) ? { provider, model, base_url, api_key } : undefined;
+        const payload = {
+            receiver,
+            language,
+            categories,
+            description,
+            zotero_id,
+            zotero_key,
+        };
+        if (modelObj) payload.model = modelObj;
+        document.getElementById('result').innerHTML = '<div class="alert alert-info">正在处理，请稍候...</div>';
+        try {
+            const res = await fetch('/run_arxiv_daily', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('result').innerHTML = '<div class="alert alert-success">' + data.msg + '</div>';
+            } else {
+                document.getElementById('result').innerHTML = '<div class="alert alert-danger">' + (data.msg || '发送失败') + '</div>';
+            }
+        } catch (err) {
+            document.getElementById('result').innerHTML = '<div class="alert alert-danger">请求失败：' + err + '</div>';
+        }
+    });
+</script>
+</body>
+</html> 

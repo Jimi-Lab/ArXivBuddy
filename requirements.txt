@@ -1,0 +1,10 @@
+python 3.11
+tqdm
+loguru
+# For ollama
+ollama
+# For openai
+openai
+Flask
+pyzotero
+llm
