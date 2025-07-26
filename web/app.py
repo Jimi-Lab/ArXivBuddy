@@ -7,9 +7,9 @@ app = Flask(__name__)
 # 默认参数
 DEFAULT_MODEL = {
     'provider': 'OpenAI',
-    'model': 'deepseek-chat',
-    'base_url': 'https://api.deepseek.com/v1',
-    'api_key': 'sk-f1be1129eb4147d68728855b1dad9e46',
+    'model': 'kimi-k2-0711-preview',
+    'base_url': 'https://api.moonshot.cn/v1',
+    'api_key': 'sk-YaLxz7XnYOoSWMIBA1qnr3t9nlSF9pjykntpGCfl4pFlEOXX',
 }
 DEFAULT_SENDER = '2026193271@qq.com'
 DEFAULT_SENDER_PASSWORD = 'wcudxlkavibhdgee'

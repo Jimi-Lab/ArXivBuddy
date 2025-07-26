@@ -848,43 +848,36 @@
                     <span class="optional-badge">Optional</span>
                 </div>
 
-                <!-- 自定义模型参数折叠区（仅保留 provider, model, base_url, api_key） -->
-                <div class="form-floating magnetic">
-                    <a class="btn btn-link" data-bs-toggle="collapse" href="#modelCollapse" role="button" aria-expanded="false" aria-controls="modelCollapse">
-                        自定义模型参数（选填）
-                    </a>
-                    <div class="collapse" id="modelCollapse">
-                        <div class="card card-body">
-                            <div class="mb-2">
-                                <label for="model_selector" class="form-label">选择模型</label>
-                                <select class="form-select" id="model_selector" name="model_selector">
-                                    <option value="">默认（deepseek-chat）</option>
-                                    <option value="deepseek">Deepseek (deepseek-chat)</option>
-                                    <option value="kimi">Kimi (Moonshot-v1-8k)</option>
-                                    <option value="qwen">Qwen (Qwen-72B-Chat)</option>
-                                    <option value="chatgpt">OpenAI ChatGPT (gpt-3.5-turbo)</option>
-                                    <option value="grok">Grok (grok-1)</option>
-                                    <option value="gemini">GeminiAI (gemini-pro)</option>
-                                </select>
-                                <div class="form-text">选择后可自动填充下方参数，也可手动修改。未选择时使用默认模型。</div>
-                            </div>
-                            <div class="mb-2">
-                                <label for="provider" class="form-label">模型提供方</label>
-                                <input type="text" class="form-control" id="provider" name="provider" placeholder="如 OpenAI、Ollama、SiliconFlow">
-                            </div>
-                            <div class="mb-2">
-                                <label for="model" class="form-label">模型名称</label>
-                                <input type="text" class="form-control" id="model" name="model" placeholder="如 deepseek-chat">
-                            </div>
-                            <div class="mb-2">
-                                <label for="base_url" class="form-label">Base URL</label>
-                                <input type="text" class="form-control" id="base_url" name="base_url" placeholder="如 https://api.deepseek.com/v1">
-                            </div>
-                            <div class="mb-2">
-                                <label for="api_key" class="form-label">API Key</label>
-                                <input type="text" class="form-control" id="api_key" name="api_key" placeholder="API 密钥">
-                            </div>
-                        </div>
+                <!-- 直接显示自定义模型参数区域 -->
+                <div class="card card-body" style="margin-bottom: 20px;">
+                    <div class="mb-2">
+                        <label for="model_selector" class="form-label">选择模型</label>
+                        <select class="form-select" id="model_selector" name="model_selector">
+                            <option value="">默认（kimi-k2-0711-preview）</option>
+                            <option value="deepseek">Deepseek (deepseek-chat)</option>
+                            <option value="kimi">Kimi (Moonshot-v1-8k)</option>
+                            <option value="qwen">Qwen (Qwen-72B-Chat)</option>
+                            <option value="chatgpt">OpenAI ChatGPT (gpt-3.5-turbo)</option>
+                            <option value="grok">Grok (grok-1)</option>
+                            <option value="gemini">GeminiAI (gemini-pro)</option>
+                        </select>
+                        <div class="form-text">选择后可自动填充下方参数，也可手动修改。未选择时使用默认模型。</div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="provider" class="form-label">模型提供方</label>
+                        <input type="text" class="form-control" id="provider" name="provider" placeholder="如 OpenAI、Ollama、SiliconFlow">
+                    </div>
+                    <div class="mb-2">
+                        <label for="model" class="form-label">模型名称</label>
+                        <input type="text" class="form-control" id="model" name="model" placeholder="如 deepseek-chat">
+                    </div>
+                    <div class="mb-2">
+                        <label for="base_url" class="form-label">Base URL</label>
+                        <input type="text" class="form-control" id="base_url" name="base_url" placeholder="如 https://api.deepseek.com/v1">
+                    </div>
+                    <div class="mb-2">
+                        <label for="api_key" class="form-label">API Key</label>
+                        <input type="text" class="form-control" id="api_key" name="api_key" placeholder="API 密钥">
                     </div>
                 </div>
 
@@ -1415,7 +1408,16 @@
                 loadingContainer.style.display = 'none';
                 progressBar.style.display = 'none';
                 if (data.success) {
-                    resultDiv.innerHTML = '<div class="alert alert-success">' + data.msg + '</div>';
+                    // 构建配置信息HTML
+                    let configHtml = `<div class="alert alert-success">${data.msg}</div>`;
+                    configHtml += `<div class="card mt-3 mb-2"><div class="card-body"><h5 class="card-title mb-3">本次任务配置信息</h5><div class="table-responsive"><table class="table table-sm table-bordered mb-0"><tbody>`;
+                    configHtml += `<tr><th>收件邮箱</th><td>${receiver}</td></tr>`;
+                    configHtml += `<tr><th>arXiv类别</th><td>${categories.join(', ')}</td></tr>`;
+                    configHtml += `<tr><th>邮件语言</th><td>${language}</td></tr>`;
+                    configHtml += `<tr><th>发送论文数</th><td>20</td></tr>`;
+                    configHtml += `<tr><th>研究兴趣领域</th><td>${description.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td></tr>`;
+                    configHtml += `</tbody></table></div></div></div>`;
+                    resultDiv.innerHTML = configHtml;
                 } else {
                     resultDiv.innerHTML = '<div class="alert alert-danger">' + (data.msg || '发送失败') + '</div>';
                 }
