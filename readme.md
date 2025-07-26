@@ -40,8 +40,19 @@ python /web/app.py
 
 1. 构建镜像：
 
+​		需要安装 docker 和 docker-buildx
+​		在项目目录下：
+
+```
+export DOCKER_BUILDKIT=1
+docker build -t arxivbuddy .
+```
 
 2. 运行容器（默认启动 Web 服务，监听 8080 端口）：
+
+```bash
+docker run -d -p 8080:8080 arxivbuddy
+```
 
 
 
