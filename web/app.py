@@ -7,12 +7,12 @@ app = Flask(__name__)
 # 默认参数
 DEFAULT_MODEL = {
     'provider': 'OpenAI',
-    'model': 'kimi-k2-0711-preview',
-    'base_url': 'https://api.moonshot.cn/v1',
-    'api_key': 'sk-YaLxz7XnYOoSWMIBA1qnr3t9nlSF9pjykntpGCfl4pFlEOXX',
+    'model': '',
+    'base_url': '',
+    'api_key': '',
 }
-DEFAULT_SENDER = '2026193271@qq.com'
-DEFAULT_SENDER_PASSWORD = 'wcudxlkavibhdgee'
+DEFAULT_SENDER = ''
+DEFAULT_SENDER_PASSWORD = ''
 DEFAULT_SMTP_SERVER = 'smtp.qq.com'
 DEFAULT_SMTP_PORT = 465
 
